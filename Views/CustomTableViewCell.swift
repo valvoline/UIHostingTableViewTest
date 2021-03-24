@@ -7,9 +7,16 @@
 
 import UIKit
 import SwiftUI
+import Combine
+
+class CellViewModel: ObservableObject {
+    @Published var title: String = "scribble.variable"
+    @Published var iconName: String = "Some placeholder"
+}
 
 class CustomTableViewCell: UITableViewCell {
-    private let hostingVC = UIHostingController(rootView: GuestView())
+    private let viewModel = CellViewModel()
+    private lazy var hostingVC = UIHostingController(rootView: GuestView(viewModel: viewModel))
     override func awakeFromNib() {
         contentView.addSubview(hostingVC.view)
         hostingVC.view.translatesAutoresizingMaskIntoConstraints = false
@@ -22,9 +29,8 @@ class CustomTableViewCell: UITableViewCell {
     }
     
     func configure(title: String, sfIcon: String) {
-        NotificationCenter.default.post(name: NSNotification.Name("titleChanged"),
-                                        object: hostingVC.rootView,
-                                        userInfo: ["title": title, "iconName": sfIcon])
+        self.viewModel.title = title
+        self.viewModel.iconName = sfIcon
     }
 }
 
@@ -32,29 +38,22 @@ class CustomTableViewCell: UITableViewCell {
 
 struct GuestView: View, Equatable {
     private var id = UUID()
-    @State var title:String?
-    @State var iconName:String?
+    
+    init(viewModel: CellViewModel) {
+        self.viewModel = viewModel
+    }
+    
+    @ObservedObject var viewModel: CellViewModel
     var body: some View {
         HStack {
-            Image(systemName: iconName ?? "scribble.variable")
+            Image(systemName: viewModel.iconName)
                 .padding(EdgeInsets.init(top: 8, leading: 18, bottom: 8, trailing: 0))
-            Text(title ?? "Some placeholder")
+            Text(viewModel.title)
                 .padding()
             Spacer()
         }
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name(rawValue: "titleChanged")),
-                   perform: { aNotification in
-                    guard let object = aNotification.object as? GuestView, object == self else { return }
-                    if let userInfo = aNotification.userInfo as? [String: Any] {
-                        if let newValue = userInfo["title"] as? String {
-                            title = newValue
-                        }
-                        if let newValue = userInfo["iconName"] as? String {
-                            iconName = newValue
-                        }
-                    }
-                   })
+       
     }
     
     //MARK: - Equatable protocol
