@@ -10,8 +10,8 @@ import SwiftUI
 import Combine
 
 class CellViewModel: ObservableObject {
-    @Published var title: String = "scribble.variable"
-    @Published var iconName: String = "Some placeholder"
+    @Published var title: String = "Some placeholder"
+    @Published var iconName: String = "scribble.variable"
 }
 
 class CustomTableViewCell: UITableViewCell {
